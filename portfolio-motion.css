@@ -1,0 +1,287 @@
+/* ============================================================
+   Adizen — Portfolio motion layer
+   Vocabulary borrowed from adizen.ai:
+     · text-roll hovers (label swaps out for its own copy)
+     · word-by-word rise on big display headings, cadenced by line
+     · masked wipes, precise lifts, square primitives
+   No bounce, no glow, no colored shadows.
+   Additive — delete this file and the template still works.
+   ============================================================ */
+
+:root {
+  --pf-ease:      cubic-bezier(.22,.7,.28,1);
+  --pf-ease-out:  cubic-bezier(.16,1,.3,1);
+  --pf-roll:      cubic-bezier(.65,.05,.36,1);
+  --pf-fast:      .16s;
+  --pf-med:       .34s;
+  --pf-slow:      .62s;
+}
+
+/* ---------- text-roll primitive (adizen.ai nav + buttons) ----------
+   Two stacked copies of the label inside a 1-line mask; hover slides
+   the stack up by exactly half its height. Structure is built in JS.
+   Single-line chrome ONLY — never use on wrapping project titles. */
+.pf-roll {
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  height: 1.2em;
+  max-width: 100%;
+  white-space: nowrap;
+}
+.pf-roll > .pf-roll-in { display: block; }
+.pf-roll > .pf-roll-in > span {
+  display: block;
+  height: 1.2em;
+  line-height: 1.2;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: clip;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+
+.pf-roll > .pf-roll-in {
+  transition: transform var(--pf-med) var(--pf-roll);
+  will-change: transform;
+}
+.pf-nav a:hover .pf-roll-in,
+.pf-nav a.is-active .pf-roll-in,
+.pf-btn:hover .pf-roll-in,
+.pf-contact .link:hover .pf-roll-in { transform: translateY(-50%); }
+
+/* ---------- scroll progress ---------- */
+.pf-progress {
+  position: fixed; top: 0; left: 0; height: 3px; z-index: 60;
+  width: 100%; transform: scaleX(var(--p, 0)); transform-origin: 0 50%;
+  background: var(--pf-accent); will-change: transform;
+}
+.pf[data-hero="blue"] .pf-progress,
+.pf[data-direction="bold"] .pf-progress { background: var(--sky); }
+
+/* ---------- sticky bar condense ---------- */
+.pf-top { transition: box-shadow var(--pf-med) var(--pf-ease); }
+.pf-top .pf-wrap { transition: height var(--pf-med) var(--pf-ease); }
+.pf-top.is-scrolled { box-shadow: 0 1px 0 var(--line), 0 10px 30px rgba(0,0,0,0.06); }
+.pf-top.is-scrolled .pf-wrap { height: 58px; }
+.pf[data-direction="bold"] .pf-top.is-scrolled .pf-wrap { height: 62px; }
+.pf-top .brand img.mark { transition: transform var(--pf-med) var(--pf-ease-out); }
+.pf-top .brand:hover img.mark { transform: rotate(-90deg); }
+
+/* nav: square marker slides in as the label rolls */
+.pf-nav a { position: relative; padding-left: 0; transition: opacity var(--pf-fast), padding-left var(--pf-med) var(--pf-ease), color var(--pf-fast); }
+.pf-nav a::before {
+  content: ""; position: absolute; left: 0; top: 50%; width: 7px; height: 7px;
+  background: var(--pf-accent); transform: translateY(-50%) scale(0);
+  transition: transform var(--pf-med) var(--pf-ease-out);
+}
+.pf[data-direction="bold"] .pf-nav a::before { background: #fff; }
+.pf-nav a:hover, .pf-nav a.is-active { opacity: 1; padding-left: 15px; }
+.pf-nav a:hover::before, .pf-nav a.is-active::before { transform: translateY(-50%) scale(1); }
+
+/* ---------- buttons: wipe + roll + precise lift ---------- */
+.pf-btn { position: relative; overflow: hidden; isolation: isolate;
+  transition: transform var(--pf-fast) var(--pf-ease), box-shadow var(--pf-med) var(--pf-ease), color var(--pf-med) var(--pf-ease); }
+.pf-btn::before {
+  content: ""; position: absolute; inset: 0; z-index: -1; background: var(--black);
+  transform: scaleX(0); transform-origin: 0 50%; transition: transform var(--pf-med) var(--pf-ease-out);
+}
+.pf-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.pf-btn:hover::before { transform: scaleX(1); }
+.pf-btn:active { transform: translateY(0); transition-duration: .06s; }
+.pf-btn.ghost::before { background: var(--pf-accent); }
+.pf-btn.ghost:hover { color: #fff; }
+.pf[data-hero="blue"] .pf-hero .pf-btn::before,
+.pf[data-hero="black"] .pf-hero .pf-btn::before { background: var(--sky); }
+.pf[data-hero="blue"] .pf-hero .pf-btn.ghost:hover,
+.pf[data-hero="black"] .pf-hero .pf-btn.ghost:hover { color: var(--blue); }
+.pf[data-direction="bold"] .pf-top .pf-btn::before { background: var(--sky); }
+
+/* ---------- display headings: word rise, cadenced by line ---------- */
+.pf-w {
+  display: inline-block;
+  opacity: 0; transform: translateY(1.05em);
+  transition: opacity .9s linear var(--wd, 0ms),
+              transform 1.5s var(--pf-ease-out) var(--wd, 0ms);
+  will-change: transform;
+}
+.pf-split.in .pf-w, .pf-split.is-live .pf-w { opacity: 1; transform: none; }
+
+/* the italic accent word draws its own path once the line has landed.
+   Anchored to the word's own line box — the <em> box is inflated by the
+   inline-block word spans and would push the rule into the next line. */
+.pf-hero h1 em, .pf-contact h2 em { position: relative; }
+.pf-hero h1 em .pf-w, .pf-contact h2 em .pf-w { position: relative; }
+.pf-accent-path {
+  position: absolute; left: -1%; bottom: 0; width: 102%; height: .15em;
+  overflow: visible; pointer-events: none;
+}
+.pf-accent-path path {
+  fill: none; stroke: currentColor; stroke-width: 2.5; stroke-linecap: square;
+  opacity: .34;
+  stroke-dasharray: 1; stroke-dashoffset: 1;
+  transition: stroke-dashoffset 1.5s var(--pf-ease-out) var(--pd, 1.05s);
+}
+.pf-split.in .pf-accent-path path,
+.pf-split.is-live .pf-accent-path path { stroke-dashoffset: 0; }
+
+/* ---------- hero entrance (non-heading copy) ---------- */
+@keyframes pf-rise { from { opacity: 0; transform: translateY(60px); } to { opacity: 1; transform: none; } }
+@keyframes pf-in-scale { from { opacity: 0; transform: scale(.86); } to { opacity: 1; transform: none; } }
+
+.pf-hero-copy > *:not(h1),
+.pf-portrait-wrap > * { opacity: 0; animation: pf-rise 1.35s var(--pf-ease-out) forwards; }
+.pf-hero-copy > *:nth-child(1) { animation-delay: .06s; }
+.pf-hero-copy > *:nth-child(3) { animation-delay: .72s; }
+.pf-hero-copy > *:nth-child(4) { animation-delay: .92s; }
+.pf-hero-copy > *:nth-child(5) { animation-delay: 1.12s; }
+.pf-portrait-wrap > *:nth-child(1) { animation: pf-in-scale 1.6s var(--pf-ease-out) .18s forwards; }
+.pf-portrait-wrap > *:nth-child(2) { animation-delay: 1.05s; }
+
+/* availability dot */
+.pf-avail .dot { animation: pf-blink 3.2s var(--pf-ease) infinite; }
+@keyframes pf-blink { 0%, 55%, 100% { opacity: 1; } 78% { opacity: .4; } }
+
+.pf-portrait { transition: transform var(--pf-slow) var(--pf-ease), box-shadow var(--pf-slow) var(--pf-ease); }
+.pf-portrait-wrap:hover .pf-portrait { transform: translateY(-6px); box-shadow: var(--shadow-lg); }
+
+/* ---------- reveal: slower, further ---------- */
+.pf-reveal {
+  transform: translateY(52px);
+  transition: opacity 1.05s ease var(--d, 0ms),
+              transform 1.25s var(--pf-ease-out) var(--d, 0ms);
+}
+.pf-reveal.in { transform: none; }
+
+/* ---------- stats ---------- */
+.pf-stat { position: relative; overflow: hidden;
+  transition: transform var(--pf-med) var(--pf-ease), box-shadow var(--pf-med) var(--pf-ease); }
+.pf-stat::before {
+  content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 6px;
+  background: var(--pf-accent); transform: scaleX(0); transform-origin: 0 50%;
+  transition: transform var(--pf-med) var(--pf-ease-out);
+}
+.pf-stat::after {
+  content: ""; position: absolute; right: 0; bottom: 0;
+  border-style: solid; border-width: 0 0 22px 22px;
+  border-color: transparent transparent var(--pf-accent) transparent;
+  opacity: 0; transform: translate(6px, 6px);
+  transition: opacity var(--pf-med), transform var(--pf-med) var(--pf-ease-out);
+}
+.pf-stat:hover { transform: translateY(-5px); box-shadow: var(--shadow-md); }
+.pf-stat:hover::before { transform: scaleX(1); }
+.pf-stat:hover::after { opacity: .18; transform: none; }
+.pf-stat .num { font-variant-numeric: tabular-nums; transition: letter-spacing var(--pf-med) var(--pf-ease); }
+.pf-stat:hover .num { letter-spacing: -0.015em; }
+
+/* ---------- timeline ---------- */
+.pf-tl-item { transition: background-color var(--pf-med) var(--pf-ease); }
+.pf-tl-item:hover { background: var(--cream); }
+.pf-stats .pf-tl-item:hover,
+.pf[data-direction="bold"] .pf-tl-item:hover { background: rgba(20,54,180,0.04); }
+.pf-tl-item .pf-tl-when, .pf-tl-item .pf-tl-marker, .pf-tl-item .pf-tl-org {
+  transition: transform var(--pf-med) var(--pf-ease), color var(--pf-med) var(--pf-ease); }
+.pf-tl-item:hover .pf-tl-when { transform: translateX(6px); }
+.pf-tl-item:hover .pf-tl-marker { transform: rotate(45deg) scale(1.12); }
+.pf[data-direction="bold"] .pf-tl-item:hover .pf-tl-marker { transform: scale(1.08); }
+.pf-tl-item:hover .pf-tl-org { transform: translateX(4px); }
+
+.pf-tag { transition: background-color var(--pf-fast), color var(--pf-fast), transform var(--pf-fast) var(--pf-ease); }
+.pf-tag:hover { background: var(--pf-accent); color: #fff; transform: translateY(-2px); }
+
+/* ---------- project cards ---------- */
+.pf-card { transition: transform var(--pf-med) var(--pf-ease); }
+.pf-card .shot { transition: box-shadow var(--pf-slow) var(--pf-ease); }
+.pf-card .shot::before {
+  content: ""; position: absolute; inset: 0; background: inherit;
+  transition: transform 1.1s var(--pf-ease-out);
+}
+.pf-card .shot .badge {
+  transition: transform var(--pf-med) var(--pf-ease-out), opacity var(--pf-med), background-color var(--pf-med); }
+.pf-card .ct { position: relative; width: fit-content; max-width: 100%; transition: color var(--pf-med) var(--pf-ease); }
+.pf-card .ct::after {
+  content: ""; position: absolute; left: 0; bottom: -6px; height: 2px; width: 100%;
+  background: var(--pf-accent); transform: scaleX(0); transform-origin: 0 50%;
+  transition: transform var(--pf-med) var(--pf-ease-out);
+}
+.pf-card:hover { transform: translateY(-6px); }
+.pf[data-direction="bold"] .pf-card:hover { transform: none; }
+.pf-card:hover .shot { box-shadow: 0 26px 60px rgba(0,0,0,0.18); }
+.pf-card:hover .shot::before { transform: scale(1.06); }
+.pf-card:hover .shot .badge { transform: translateY(-3px); background: var(--black); }
+.pf-card:hover .ct { color: var(--pf-accent); }
+.pf-card:hover .ct::after { transform: scaleX(1); }
+
+/* Featured rows — same hover vocabulary as grid cards (shot zoom + title underline) */
+.pf-feature-row .shot { transition: box-shadow var(--pf-slow) var(--pf-ease); }
+.pf-feature-row .shot::before {
+  content: ""; position: absolute; inset: 0; background: inherit;
+  transition: transform 1.1s var(--pf-ease-out);
+}
+.pf-feature-row .shot .badge {
+  transition: transform var(--pf-med) var(--pf-ease-out), background-color var(--pf-med);
+}
+.pf-feature-title {
+  position: relative; width: fit-content; max-width: 100%;
+  transition: color var(--pf-med) var(--pf-ease);
+}
+.pf-feature-title::after {
+  content: ""; position: absolute; left: 0; bottom: -6px; height: 2px; width: 100%;
+  background: var(--pf-accent); transform: scaleX(0); transform-origin: 0 50%;
+  transition: transform var(--pf-med) var(--pf-ease-out);
+}
+.pf-feature-row:hover .shot { box-shadow: 0 26px 60px rgba(0,0,0,0.18); }
+.pf-feature-row:hover .shot::before { transform: scale(1.06); }
+.pf-feature-row:hover .shot .badge { transform: translateY(-3px); background: var(--black); }
+.pf-feature-row:hover .pf-feature-title { color: var(--pf-accent); }
+.pf-feature-row:hover .pf-feature-title::after { transform: scaleX(1); }
+
+/* ---------- chips ---------- */
+.pf-chip { transition: transform var(--pf-fast) var(--pf-ease), background-color var(--pf-fast), color var(--pf-fast), box-shadow var(--pf-fast); }
+.pf-chip::before { transition: transform var(--pf-med) var(--pf-ease-out), background-color var(--pf-fast); }
+.pf-chip:hover { transform: translateY(-3px); box-shadow: var(--shadow-sm); }
+.pf-chip:hover::before { transform: rotate(45deg) scale(1.25); }
+
+.pf-kit-group .gh { position: relative; }
+.pf-kit-group .gh::after {
+  content: ""; position: absolute; left: 0; bottom: -1px; height: 1px; width: 100%;
+  background: var(--pf-accent); transform: scaleX(0); transform-origin: 0 50%;
+  transition: transform .9s var(--pf-ease-out) .15s;
+}
+.pf-kit-group.in .gh::after { transform: scaleX(1); }
+
+/* ---------- eyebrow square ---------- */
+.pf-reveal.pf-eyebrow.in::before, .in .pf-eyebrow::before { animation: pf-spin-in .7s var(--pf-ease-out); }
+@keyframes pf-spin-in { from { transform: rotate(-90deg) scale(0); } to { transform: none; } }
+
+/* ---------- contact ---------- */
+.pf-contact .link { transition: transform var(--pf-med) var(--pf-ease); }
+.pf-contact .link img { transition: transform var(--pf-med) var(--pf-ease-out), opacity var(--pf-fast); }
+.pf-contact .link .pf-roll { border-bottom: 1px solid rgba(255,255,255,0.35); }
+.pf-contact .link span { border-bottom-color: transparent; }
+.pf-contact .link:hover { transform: translateX(5px); }
+.pf-contact .link:hover .pf-roll { border-bottom-color: #fff; }
+.pf-contact .link:hover img { transform: scale(1.12) rotate(-6deg); opacity: 1; }
+
+/* footer pattern drifts, very slowly */
+.pf-pattern { animation: pf-drift 90s linear infinite; }
+@keyframes pf-drift { to { background-position-x: -600px; } }
+
+} /* end prefers-reduced-motion: no-preference */
+
+/* ---------- focus + touch targets (never motion-gated) ---------- */
+a:focus-visible, button:focus-visible { outline: 2px solid var(--pf-accent); outline-offset: 3px; }
+.pf-contact a:focus-visible { outline-color: var(--sky); }
+
+.pf-btn { min-height: 44px; }
+.pf-nav a { display: inline-flex; align-items: center; min-height: 44px; }
+.pf-contact .link { min-height: 44px; }
+@media (hover: none) { .pf-chip, .pf-tag { min-height: 44px; } }
+
+/* reduced motion: static, nothing hidden */
+@media (prefers-reduced-motion: reduce) {
+  .pf-progress { display: none; }
+  .pf-w { opacity: 1; transform: none; }
+  .pf-accent-path { display: none; }
+  .pf-roll > .pf-roll-in > span + span { display: none; }
+}
